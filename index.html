@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roblox Stock Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { margin:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(to right, #f0f3f7, #d9e2ec); color: #333; }
+  header { background-color: #5a92f2; color: white; padding: 30px; text-align: center; font-size: 2.2em; letter-spacing: 1px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+  main { padding: 40px; max-width: 1100px; margin: auto; }
+  .stock-card { background: white; border-radius: 20px; padding: 30px; margin-bottom: 35px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); transition: transform 0.3s, box-shadow 0.3s; }
+  .stock-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
+  .stock-card h2 { margin-top: 0; color: #5a92f2; font-size: 1.8em; }
+  .stock-card p { margin: 10px 0; font-size: 1.15em; }
+  canvas { margin-top: 25px; border-radius: 20px; background: #fefefe; padding: 20px; box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
+  .highlight { font-weight: bold; color: #ff4c4c; }
+  select { padding: 10px 15px; border-radius: 10px; margin-top: 15px; font-size: 1.05em; border: 1px solid #5a92f2; background: #e7f0fe; cursor: pointer; transition: all 0.3s; }
+  select:hover { background: #d0e2fd; }
+  select:focus { outline: none; border-color: #3b73d1; box-shadow: 0 0 8px rgba(74,144,226,0.5); }
+</style>
+</head>
+<body>
+<header>Roblox (RBLX) Stock Dashboard</header>
+<main>
+  <div class="stock-card" id="stock-info">
+    <p>Loading Roblox stock data...</p>
+  </div>
+  <div class="stock-card">
+    <label for="timeRange">Select Time Range:</label>
+    <select id="timeRange">
+      <option value="7d">Past 7 Days</option>
+      <option value="1m">Past Month</option>
+      <option value="1y">Past Year</option>
+      <option value="5y">Past 5 Years</option>
+    </select>
+    <canvas id="stockChart" height="260"></canvas>
+  </div>
+</main>
+<script>
+const stock = {
+  name: 'Roblox Corporation',
+  symbol: 'RBLX',
+  price: 45.67,
+  change: -1.23,
+  changesPercentage: -2.63,
+  dayHigh: 47.00,
+  dayLow: 44.50,
+  open: 46.00,
+  previousClose: 46.90,
+  volume: 1523000,
+  historical: {
+    '7d': [45.67, 45.95, 46.20, 46.10, 46.00, 45.85, 45.67],
+    '1m': Array.from({length: 30}, (_, i) => (45 + Math.sin(i/5)*2.5).toFixed(2)),
+    '1y': Array.from({length: 12}, (_, i) => (45 + Math.sin(i/2)*8).toFixed(2)),
+    '5y': Array.from({length: 5}, (_, i) => (45 + i*4 + Math.random()*3).toFixed(2))
+  }
+};
+
+const labelsMap = {
+  '7d': ['24 Aug','25 Aug','26 Aug','27 Aug','28 Aug','29 Aug','30 Aug'],
+  '1m': Array.from({length:30}, (_,i) => `${i+1} Aug`),
+  '1y': ['Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'],
+  '5y': ['2021','2022','2023','2024','2025']
+};
+
+document.getElementById('stock-info').innerHTML = `
+  <h2>${stock.name} (${stock.symbol})</h2>
+  <p>Current Price: $<span class="highlight">${stock.price}</span></p>
+  <p>Change: <span class="highlight">${stock.change} (${stock.changesPercentage}%)</span></p>
+  <p>Day High: $${stock.dayHigh}</p>
+  <p>Day Low: $${stock.dayLow}</p>
+  <p>Open: $${stock.open}</p>
+  <p>Previous Close: $${stock.previousClose}</p>
+  <p>Volume: ${stock.volume.toLocaleString()}</p>
+`;
+
+const ctx = document.getElementById('stockChart').getContext('2d');
+let chart;
+
+function updateChart(range) {
+    const data = stock.historical[range];
+    const labels = labelsMap[range];
+
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Price in USD',
+                data: data,
+                borderColor: '#5a92f2',
+                backgroundColor: 'rgba(90,146,242,0.25)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#5a92f2',
+                pointHoverBackgroundColor: '#3b73d1'
+            }]
+        },
+        options: {
+            responsive: true,
+            interaction: { mode: 'nearest', intersect: false },
+            plugins: {
+                legend: { display: false },
+                tooltip: { mode: 'index', intersect: false, backgroundColor: '#3b73d1', titleColor: '#fff', bodyColor: '#fff', titleFont: { weight: 'bold' } }
+            },
+            scales: {
+                y: { beginAtZero: false, grid: { color: '#e0e0e0' }, ticks: { color: '#333', font: { weight: 'bold' } } },
+                x: { grid: { display: false }, ticks: { color: '#333', font: { weight: 'bold' } } }
+            }
+        }
+    });
+}
+
+updateChart('7d');
+document.getElementById('timeRange').addEventListener('change', (e) => {
+    updateChart(e.target.value);
+});
+</script>
+</body>
+</html>
